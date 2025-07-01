@@ -336,11 +336,17 @@ class ElevationMappingNode(Node):
         K = np.array(camera_info_msg.k, dtype=np.float32).reshape(3, 3)
         D = np.array(camera_info_msg.d, dtype=np.float32).reshape(-1, 1)
 
-        transform_camera_to_map = self.safe_lookup_transform(
-            self.map_frame,
-            camera_msg.header.frame_id,
-            camera_msg.header.stamp
-        )
+        try:
+            transform_camera_to_map = self.safe_lookup_transform(
+                self.map_frame,
+                camera_msg.header.frame_id,
+                camera_msg.header.stamp
+            )
+        except tf2_ros.LookupException as e:
+            if not hasattr(self, '_tf_image_warning_shown'):
+                self.get_logger().warn(f"Waiting for transform to become available for image processing: {e}. Will process images once transform is available.")
+                self._tf_image_warning_shown = True
+            return
         t = transform_camera_to_map.transform.translation
         q = transform_camera_to_map.transform.rotation
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
@@ -361,11 +367,19 @@ class ElevationMappingNode(Node):
         if points['xyz'].size == 0:
             return
         frame_sensor_id = msg.header.frame_id
-        transform_sensor_to_map = self.safe_lookup_transform(
-            self.map_frame,
-            frame_sensor_id,
-            msg.header.stamp
-        )
+        
+        # Try to get transform, skip if not available yet
+        try:
+            transform_sensor_to_map = self.safe_lookup_transform(
+                self.map_frame,
+                frame_sensor_id,
+                msg.header.stamp
+            )
+        except tf2_ros.LookupException as e:
+            if not hasattr(self, '_tf_warning_shown'):
+                self.get_logger().warn(f"Waiting for transform to become available: {e}. Will process pointclouds once transform is available.")
+                self._tf_warning_shown = True
+            return
         t = transform_sensor_to_map.transform.translation
         q = transform_sensor_to_map.transform.rotation
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
@@ -376,11 +390,17 @@ class ElevationMappingNode(Node):
     def pose_update(self) -> None:
         if self._last_t is None:
             return
-        transform = self.safe_lookup_transform(
-            self.map_frame,
-            self.base_frame,
-            self._last_t
-        )
+        try:
+            transform = self.safe_lookup_transform(
+                self.map_frame,
+                self.base_frame,
+                self._last_t
+            )
+        except tf2_ros.LookupException as e:
+            if not hasattr(self, '_tf_pose_warning_shown'):
+                self.get_logger().warn(f"Waiting for transform to become available for pose updates: {e}. Will update pose once transform is available.")
+                self._tf_pose_warning_shown = True
+            return
         t = transform.transform.translation
         q = transform.transform.rotation
         trans = np.array([t.x, t.y, t.z], dtype=np.float32)
