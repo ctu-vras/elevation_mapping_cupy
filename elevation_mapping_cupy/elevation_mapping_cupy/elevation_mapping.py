@@ -523,10 +523,11 @@ class ElevationMap:
         Returns:
             None:
         """
-
+        
         image = np.stack(image, axis=0)
         if len(image.shape) == 2:
             image = image[None]
+        #self.logger.warn(f"{image.shape}")
 
         # Convert to cupy
         image = cp.asarray(image, dtype=self.data_type)
@@ -557,12 +558,29 @@ class ElevationMap:
             D *= 0
 
         # Calculate transformation matrix
+        #R = cp.array([ 
+        #    [0., 0, 0], 
+        #    [0, 0., 0], 
+        #    [0, 0, 0.] 
+        #], dtype=cp.float32) 
+
         P = cp.asarray(K @ cp.concatenate([R, t[:, None]], 1), dtype=np.float32)
         t_cam_map = -R.T @ t - self.center
         t_cam_map = t_cam_map.get()
         x1 = cp.uint32((self.cell_n / 2) + ((t_cam_map[0]) / self.resolution))
         y1 = cp.uint32((self.cell_n / 2) + ((t_cam_map[1]) / self.resolution))
         z1 = cp.float32(t_cam_map[2])
+
+        self.logger.warn(f"resol {self.resolution}")
+        self.logger.warn(f"t_cam_map {t_cam_map}")
+        self.logger.warn(f"R {R}")
+        self.logger.warn(f"t {t}")
+        self.logger.warn(f"center {self.center}")
+        self.logger.warn(f"P {P}")
+
+        self.logger.warn(f"x1 {x1}")
+        self.logger.warn(f"y1 {y1}")
+        self.logger.warn(f"z1 {z1}")
 
         self.uv_correspondence *= 0
         self.valid_correspondence[:, :] = False
@@ -583,6 +601,7 @@ class ElevationMap:
                 self.valid_correspondence,
                 size=int(self.cell_n * self.cell_n),
             )
+            #self.logger.warn(f"{image.sum()}")
             self.semantic_map.update_layers_image(
                 image,
                 channels,

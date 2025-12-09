@@ -207,7 +207,6 @@ class ElevationMappingNode(Node):
 
         pointcloud_subs = {}
         image_subs = {}
-
         for key, config in self.my_subscribers.items():
             data_type = config.get("data_type")
             if data_type == "image":
@@ -323,6 +322,9 @@ class ElevationMappingNode(Node):
             )
 
     def image_callback(self, camera_msg: Image, camera_info_msg: CameraInfo, sub_key: str) -> None:
+        #camera_info_msg.header.frame_id = "oak_rgb_camera_frame"
+        #camera_msg.header.frame_id = "oak_rgb_camera_frame"
+
         self._last_t = camera_msg.header.stamp
         try:
             semantic_img = self.cv_bridge.imgmsg_to_cv2(camera_msg, desired_encoding="passthrough")
@@ -351,6 +353,9 @@ class ElevationMappingNode(Node):
         q = transform_camera_to_map.transform.rotation
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
         R = quaternion_matrix([q.x, q.y, q.z, q.w])[:3, :3].astype(np.float32)
+        #self.get_logger().warn(f"{sub_key}")
+        #self.get_logger().warn(f"{semantic_img[0].shape}")
+
         self._map.input_image(
             semantic_img, ["rgb"], R, t_np, K, D, camera_info_msg.distortion_model,
             camera_info_msg.height, camera_info_msg.width

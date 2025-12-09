@@ -283,7 +283,11 @@ class SemanticMap:
         process_channels, fusion_methods = self.get_fusion(
             channels, self.param.image_channel_fusions, self.layer_specs_image
         )
+        #print(f"{process_channels}")
+        #print(f"{fusion_methods}")
+
         self.new_map[self.delete_new_layers] = 0.0
+        #print(self.layer_names)
         for j, (fusion, channel) in enumerate(zip(fusion_methods, process_channels)):
             if channel not in self.layer_names:
                 print(f"Layer {channel} not found, adding it to the semantic map")
@@ -293,7 +297,21 @@ class SemanticMap:
             if sem_map_idx == -1:
                 print(f"Layer {channel} not found!")
                 return
-
+            print(f"FUS {fusion}")
+            print(f"IDX {cp.uint64(sem_map_idx)}")
+            print(f"IMG SUM {image.sum()}")
+            print(f"IMG SHA {image.shape}")
+            print(f"J {j}")
+            print(f"UV {uv_correspondence.shape}")
+            print(f"UV {uv_correspondence.sum()}")
+            print(f"VALID {valid_correspondence.shape}")
+            print(f"VALID {valid_correspondence.sum()}")
+            print(f"H {image_height}")
+            print(f"W {image_width}")
+            print(f"SEM MAP {self.semantic_map.sum()}")
+            print(f"SEM MAP {self.semantic_map.shape}")
+            print(f"NEW MAP {self.new_map.sum()}")
+            print(f"NEW MAP {self.new_map.shape}")
             # update the layers with the fusion algorithm
             self.fusion_manager.execute_image_plugin(
                 fusion,

@@ -17,7 +17,7 @@ class ImageDebugNode:
         # setup pointcloud creation
         self.cv_bridge = CvBridge()
         # rospy.Subscriber("", CameraInfo, self.cam_info_callback)
-        rospy.Subscriber("/zed2i/zed_node/right/image_rect_color", Image, self.image_callback)
+        rospy.Subscriber("/luxonis/oak/rgb/image_raw", Image, self.image_callback)
         self.debug_pub = rospy.Publisher("/debug_image", Image, queue_size=2)
 
     def image_callback(self, rgb_msg):

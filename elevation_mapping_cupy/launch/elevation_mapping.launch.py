@@ -2,7 +2,7 @@ import os
 from launch import LaunchDescription
 from launch_ros.actions import Node
 from ament_index_python.packages import get_package_share_directory
-from launch.actions import DeclareLaunchArgument
+from launch.actions import DeclareLaunchArgument, LogInfo
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
 from launch.conditions import IfCondition
 
@@ -20,6 +20,7 @@ def generate_launch_description():
         default_value='helhest/base.yaml',
         description='Name of the robot-specific config file within config/setups/'
     )
+    
 
     launch_rviz_arg = DeclareLaunchArgument(
         'launch_rviz',
@@ -62,9 +63,12 @@ def generate_launch_description():
             core_param_path,
             robot_param_path,
             {'use_sim_time': use_sim_time}
-        ]
+        ],
     )
 
+    # Log the resolved path at launch time
+    print_path_action = LogInfo(msg=['Resolved robot param path: ', robot_param_path])
+    
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -75,11 +79,30 @@ def generate_launch_description():
         condition=IfCondition(launch_rviz)
     )
 
+    relay_front = Node(
+        package='topic_tools',
+        executable='relay',
+        name='relay_front',
+        arguments=['/livox/lidar_front', '/livox/lidar_both'],
+        output='screen',
+    )
+
+    relay_rear = Node(
+        package='topic_tools',
+        executable='relay',
+        name='relay_rear',
+        arguments=['/livox/lidar_rear', '/livox/lidar_both'],
+        output='screen',
+    )
+
     return LaunchDescription([
         robot_param_arg,
+        print_path_action,
         launch_rviz_arg,
         rviz_config_arg,
         use_sim_time_arg,
         elevation_mapping_node,
-        rviz_node
+        rviz_node,
+        #relay_front,
+        #relay_rear
     ])

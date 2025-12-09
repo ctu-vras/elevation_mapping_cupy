@@ -16,7 +16,6 @@ setup(
     maintainer_email='your.email@example.com',
     description='Elevation mapping on GPU',
     license='MIT',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
             'elevation_mapping_node = elevation_mapping_cupy.elevation_mapping_ros:main',
