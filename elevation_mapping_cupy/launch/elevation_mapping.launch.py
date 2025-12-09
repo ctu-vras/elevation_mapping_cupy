@@ -17,7 +17,7 @@ def generate_launch_description():
     robot_param_arg = DeclareLaunchArgument(
         'robot_config',
         # default_value='turtle_bot/turle_bot_simple.yaml',
-        default_value='menzi/base.yaml',
+        default_value='helhest/base.yaml',
         description='Name of the robot-specific config file within config/setups/'
     )
 
@@ -56,6 +56,8 @@ def generate_launch_description():
         executable='elevation_mapping_node',
         name='elevation_mapping_node',
         output='screen',
+	respawn=True,
+	respawn_delay=1.0,
         parameters=[
             core_param_path,
             robot_param_path,

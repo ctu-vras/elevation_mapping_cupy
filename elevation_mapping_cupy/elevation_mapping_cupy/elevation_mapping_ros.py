@@ -352,7 +352,7 @@ class ElevationMappingNode(Node):
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
         R = quaternion_matrix([q.x, q.y, q.z, q.w])[:3, :3].astype(np.float32)
         self._map.input_image(
-            sub_key, semantic_img, R, t_np, K, D,
+            semantic_img, ["rgb"], R, t_np, K, D, camera_info_msg.distortion_model,
             camera_info_msg.height, camera_info_msg.width
         )
         self._image_process_counter += 1
@@ -360,12 +360,36 @@ class ElevationMappingNode(Node):
     def pointcloud_callback(self, msg: PointCloud2, sub_key: str) -> None:
         self._last_t = msg.header.stamp
         channels = ["x", "y", "z"] + self.param.subscriber_cfg[sub_key].get("channels", [])
+
         try:
             points = rnp.numpify(msg)
-        except:
+        except Exception as e:
+            self.get_logger().warn(f"Failed to convert PointCloud2 to NumPy: {e}")
             return
-        if points['xyz'].size == 0:
+
+        # Check if 'x', 'y', 'z' fields exist
+        if not all(field in points.dtype.names for field in ("x", "y", "z")):
+            self.get_logger().warn("PointCloud does not contain x, y, z fields.")
             return
+
+        # Build (N, 3) XYZ array
+        xyz = np.stack([points["x"], points["y"], points["z"]], axis=-1).reshape(-1, 3)
+
+        # Apply mask to remove rows with NaNs in XYZ
+        mask = ~np.isnan(xyz).any(axis=1)
+        xyz = xyz[mask]
+
+        if xyz.shape[0] == 0:
+            return
+
+        # Filter additional channels to keep them aligned with xyz
+        filtered_channels = {}
+        for ch in channels[3:]:  # skip x, y, z
+            if ch in points.dtype.names:
+                filtered_channels[ch] = points[ch][mask]
+            else:
+                filtered_channels[ch] = None  # or fill with zeros if preferred
+
         frame_sensor_id = msg.header.frame_id
         
         # Try to get transform, skip if not available yet
@@ -384,7 +408,9 @@ class ElevationMappingNode(Node):
         q = transform_sensor_to_map.transform.rotation
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
         R = quaternion_matrix([q.x, q.y, q.z, q.w])[:3, :3].astype(np.float32)
-        self._map.input_pointcloud(points['xyz'], channels, R, t_np, 0, 0)
+
+        # Pass filtered xyz and extra channels to your map
+        self._map.input_pointcloud(xyz, channels, R, t_np, 0, 0)
         self._pointcloud_process_counter += 1
 
     def pose_update(self) -> None:

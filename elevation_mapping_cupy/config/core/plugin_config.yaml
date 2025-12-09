@@ -14,7 +14,7 @@ smooth_filter:
   is_height_layer: True
   layer_name: "smooth"
   extra_params:
-    input_layer_name: "min_filter"
+    input_layer_name: "elevation"
 # Apply inpainting using opencv
 inpainting:
   enable: True

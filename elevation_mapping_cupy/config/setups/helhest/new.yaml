@@ -1,0 +1,43 @@
+/elevation_mapping_node:
+  ros__parameters:
+
+    pointcloud_channel_fusions:
+      rgb: 'color'                # 'color' fusion is used for the 'rgb' channel
+      default: 'average'          # 'average' fusion is used for channels not listed here
+
+    image_channel_fusions:
+      rgb: 'color'                # 'color' fusion is used for the 'rgb' channel
+      default: 'exponential'      # 'exponential' fusion is used for channels not listed here
+      feat_.*: 'exponential'      # 'exponential' fusion is also used for any channel starting with 'feat_' Regular expressions can be used for channel names
+      sem_.*: 'exponential'
+
+    publishers:
+      elevation_map_raw:
+        layers: ['elevation', 'traversability', 'variance', 'rgb', 'upper_bound']
+        basic_layers: ['elevation', 'traversability']
+        fps: 5.0
+
+      elevation_map_recordable:
+        layers: ['elevation', 'traversability', 'variance', 'rgb']
+        basic_layers: ['elevation', 'traversability']
+        fps: 2.0
+
+      filtered_elevation_map:
+        layers: ['inpaint', 'smooth', 'min_filter', 'upper_bound']
+        basic_layers: ['inpaint']
+        fps: 5.0
+
+    subscribers:
+      livox:
+        topic_name: '/livox/lidar'
+        data_type: pointcloud
+
+      rgb_image:
+        topic_name: '/luxonis/oak/rgb/image_raw'
+        camera_info_topic_name: '/luxonis/oak/rgb/camera_info'
+        data_type: image
+
+      semantics_image:
+        topic_name: '/luxonis/oak/nn/mask/image_raw'
+        camera_info_topic_name: '/luxonis/oak/nn/mask/camera_info'
+        data_type: image

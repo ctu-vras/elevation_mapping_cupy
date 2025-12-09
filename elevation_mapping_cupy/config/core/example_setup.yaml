@@ -27,7 +27,7 @@
 
     subscribers:
       front_cam:
-        topic_name: '/camera/depth/points'
+        topic_name: '/points/filtered'
         data_type: pointcloud
       color_cam: # for color camera
         topic_name: '/camera/rgb/image_raw'
