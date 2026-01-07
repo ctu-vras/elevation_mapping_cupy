@@ -347,6 +347,9 @@ class ElevationMappingNode(Node):
                 self.get_logger().warn(f"Waiting for transform to become available for image processing: {e}. Will process images once transform is available.")
                 self._tf_image_warning_shown = True
             return
+        except tf2_ros.ConnectivityException as e:
+            self.get_logger().error(f"Error transforming image to map: {e}. Skipping the image.")
+            return
         t = transform_camera_to_map.transform.translation
         q = transform_camera_to_map.transform.rotation
         t_np = np.array([t.x, t.y, t.z], dtype=np.float32)
@@ -403,6 +406,9 @@ class ElevationMappingNode(Node):
             if not hasattr(self, '_tf_warning_shown'):
                 self.get_logger().warn(f"Waiting for transform to become available: {e}. Will process pointclouds once transform is available.")
                 self._tf_warning_shown = True
+            return
+        except tf2_ros.ConnectivityException as e:
+            self.get_logger().error(f"Error transforming image to map: {e}. Skipping the image.")
             return
         t = transform_sensor_to_map.transform.translation
         q = transform_sensor_to_map.transform.rotation
