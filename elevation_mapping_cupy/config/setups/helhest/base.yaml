@@ -22,7 +22,7 @@
       #  topic_name: '/livox/lidar_front'
       #  data_type: pointcloud
       livox:
-        topic_name: '/livox/lidar_both_filtered'
+        topic_name: '/ouster/points'
         data_type: pointcloud
       #front_image:
       #  topic_name_camera: '/luxonis/oak/right/image_raw'
